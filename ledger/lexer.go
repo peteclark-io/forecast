@@ -47,11 +47,7 @@ func (l *lexer) Scan() (Token, string) {
 	}
 
 	if isCleared(ch) {
-		return CLEARED, string(ch)
-	}
-
-	if isNotCleared(ch) {
-		return NOT_CLEARED, string(ch)
+		return CLEARED_INDICATOR, string(ch)
 	}
 
 	if isAccountSeparator(ch) {

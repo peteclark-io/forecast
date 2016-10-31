@@ -1,5 +1,7 @@
 package ledger
 
+import "unicode"
+
 type Token int
 
 const (
@@ -12,17 +14,16 @@ const (
 	IDENT
 	DATE_SEPARATOR
 	ACCOUNT_SEPARATOR
-	CLEARED
-	NOT_CLEARED
+	CLEARED_INDICATOR
 	COMMENT
 )
 
 func isWhitespace(ch rune) bool {
-	return ch == ' ' || ch == '\t'
+	return ch == ' ' || ch == '\t' || ch == '\v' || ch == '\f'
 }
 
 func isNumber(ch rune) bool {
-	return ch >= '0' && ch <= '9'
+	return unicode.IsNumber(ch) || ch == '.'
 }
 
 func isDateSeparator(ch rune) bool {
@@ -30,11 +31,7 @@ func isDateSeparator(ch rune) bool {
 }
 
 func isCleared(ch rune) bool {
-	return ch == '*'
-}
-
-func isNotCleared(ch rune) bool {
-	return ch == '!'
+	return ch == '*' || ch == '!'
 }
 
 func isAccountSeparator(ch rune) bool {
@@ -42,7 +39,7 @@ func isAccountSeparator(ch rune) bool {
 }
 
 func isNewLine(ch rune) bool {
-	return ch == '\n'
+	return unicode.IsSpace(ch)
 }
 
 func isLetter(ch rune) bool {

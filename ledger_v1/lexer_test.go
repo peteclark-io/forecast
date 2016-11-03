@@ -1,13 +1,10 @@
-package ledger
+package ledger_v1
 
 import (
 	"bufio"
 	"strings"
 	"testing"
 )
-
-const testDate = `2016/02/08 * I am a really long Payee
-`
 
 const testPosting = `
 commodity £
@@ -31,22 +28,12 @@ commodity £
     Assets:Current:Account
 `
 
-func TestDateLex(t *testing.T) {
-	l := lexer{stream: bufio.NewReader(strings.NewReader(testDate)), last: SOF}
-	for {
-		token, txt := l.Scan()
-		t.Log(token, txt)
-		if token == EOF {
-			break
-		}
-	}
-}
+func TestScan(t *testing.T) {
+	l := lexer{stream: bufio.NewReader(strings.NewReader(testPosting))}
 
-func TestFullPosting(t *testing.T) {
-	l := lexer{stream: bufio.NewReader(strings.NewReader(testPosting)), last: SOF}
 	for {
-		token, txt := l.Scan()
-		t.Log(token, txt)
+		token, text := l.Scan()
+		t.Log(text)
 		if token == EOF {
 			break
 		}

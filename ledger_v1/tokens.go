@@ -1,4 +1,4 @@
-package ledger
+package ledger_v1
 
 import "unicode"
 
@@ -7,36 +7,16 @@ type Token int
 const (
 	eof           = rune(0)
 	ILLEGAL Token = iota
-	SOF
 	EOF
-	SPACE
-	BLOCK_SPACE
-	CR_BLOCK_SPACE
+	WS
 	CR
-	ACCOUNT
-	PAYEE
-	DATE
+	IDENT
+	NUMBER
 	ACCOUNT_SEPARATOR
 	CLEARED_INDICATOR
+	DATE_SEPARATOR
 	COMMENT
-	PRICE
-	CURRENCY
 )
-
-type primitive struct {
-	number int
-	text   int
-	other  map[rune]int
-	last   rune
-}
-
-func (p *primitive) total() int {
-	total := p.number + p.text
-	for _, v := range p.other {
-		total = total + v
-	}
-	return total
-}
 
 func isWhitespace(ch rune) bool {
 	return ch == ' ' || ch == '\t' || ch == '\v' || ch == '\f'
@@ -62,6 +42,6 @@ func isNewLine(ch rune) bool {
 	return unicode.IsSpace(ch)
 }
 
-func isText(ch rune) bool {
-	return ch != ':' && (unicode.IsLetter(ch) || unicode.IsPunct(ch))
+func isLetter(ch rune) bool {
+	return (ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch == '\'')
 }

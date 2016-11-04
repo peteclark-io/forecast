@@ -8,24 +8,25 @@ import (
 type Token int
 
 const (
-	eof           = rune(0)
-	ILLEGAL Token = iota
-	SOF
-	EOF
-	SPACE
-	BLOCK_SPACE
-	CR_BLOCK_SPACE
-	CR
-	ACCOUNT
-	PAYEE
-	DATE
-	ACCOUNT_SEPARATOR
-	CLEARED_INDICATOR
-	IS_NEGATIVE
-	COMMENT
-	PRICE
-	PRICE_CALC
-	CURRENCY
+	eof                       = rune(0)
+	ILLEGAL             Token = iota // 1
+	SOF                              // 2
+	EOF                              // 3
+	SPACE                            // 4
+	BLOCK_SPACE                      // 5
+	CR_BLOCK_SPACE                   // 6
+	CR                               // 7
+	ACCOUNT                          // 8
+	PAYEE                            // 9
+	DATE                             // 10
+	ACCOUNT_SEPARATOR                // 11
+	CLEARED_INDICATOR                // 12
+	IS_NEGATIVE                      // 13
+	COMMENT                          // 14
+	PRICE                            // 15
+	PRICE_CALC_BOUNDARY              // 16
+	PRICE_OPERATOR                   // 17
+	CURRENCY                         // 18
 )
 
 type primitive struct {
@@ -72,8 +73,12 @@ func isComment(ch rune) bool {
 	return ch == ';'
 }
 
-func isCalculation(ch rune) bool {
-	return ch == '(' || ch == ')' || ch == '+' || ch == '-'
+func isCalculationBoundary(ch rune) bool {
+	return ch == '(' || ch == ')'
+}
+
+func isCalculationOperator(ch rune) bool {
+	return ch == '+' || ch == '-' || ch == '*' || ch == '/'
 }
 
 func isText(ch rune) bool {

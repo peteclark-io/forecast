@@ -96,12 +96,21 @@ func (l *lexer) Scan() (Token, string) {
 		return ACCOUNT_SEPARATOR, string(ch)
 	}
 
+	if isCalculationBoundary(ch) && (l.last == BLOCK_SPACE || l.last == PRICE) {
+		return PRICE_CALC_BOUNDARY, string(ch)
+	}
+
 	if isNegative(ch) && (l.last == BLOCK_SPACE) {
 		l.last = IS_NEGATIVE
 		return IS_NEGATIVE, string(ch)
 	}
 
-	if unicode.IsSymbol(ch) && (l.last == BLOCK_SPACE || l.last == IS_NEGATIVE) {
+	if isNegative(ch) && (l.last == BLOCK_SPACE || l.last == PRICE_OPERATOR) {
+		l.last = IS_NEGATIVE
+		return IS_NEGATIVE, string(ch)
+	}
+
+	if unicode.IsSymbol(ch) && (l.last == BLOCK_SPACE || l.last == IS_NEGATIVE || l.last == PRICE_CALC_BOUNDARY || l.last == PRICE_OPERATOR) {
 		l.unread()
 		txt := l.readAllOfType(unicode.IsSymbol, nil)
 		l.last = CURRENCY
@@ -113,6 +122,11 @@ func (l *lexer) Scan() (Token, string) {
 		price := l.readAllOfType(isNumber, nil)
 		l.last = PRICE
 		return PRICE, price
+	}
+
+	if isCalculationOperator(ch) && l.last == PRICE {
+		l.last = PRICE_OPERATOR
+		return PRICE_OPERATOR, string(ch)
 	}
 
 	if isNewLine(ch) {

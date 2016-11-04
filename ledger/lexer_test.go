@@ -31,11 +31,17 @@ commodity £
     Assets:Current:Account ; what up doggg
 `
 
+const testCalcPosting = `
+2016/11/01 ! Vision Express
+    Expenses:Contact Lenses                                         (£17 + -£10 - €1)
+    Assets:Current:Account ; what up doggg
+`
+
 func TestDateLex(t *testing.T) {
 	l := lexer{stream: bufio.NewReader(strings.NewReader(testDate)), last: SOF}
 	for {
-		token, txt := l.Scan()
-		t.Log(token, txt)
+		token, _ := l.Scan()
+		//t.Log(token, txt)
 		if token == EOF {
 			break
 		}
@@ -44,6 +50,17 @@ func TestDateLex(t *testing.T) {
 
 func TestFullPosting(t *testing.T) {
 	l := lexer{stream: bufio.NewReader(strings.NewReader(testPosting)), last: SOF}
+	for {
+		token, _ := l.Scan()
+		//t.Log(token, txt)
+		if token == EOF {
+			break
+		}
+	}
+}
+
+func TestPriceCalc(t *testing.T) {
+	l := lexer{stream: bufio.NewReader(strings.NewReader(testCalcPosting)), last: SOF}
 	for {
 		token, txt := l.Scan()
 		t.Log(token, txt)

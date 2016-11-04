@@ -24,6 +24,7 @@ const (
 	IS_NEGATIVE
 	COMMENT
 	PRICE
+	PRICE_CALC
 	CURRENCY
 )
 
@@ -69,6 +70,10 @@ func isNewLine(ch rune) bool {
 
 func isComment(ch rune) bool {
 	return ch == ';'
+}
+
+func isCalculation(ch rune) bool {
+	return ch == '(' || ch == ')' || ch == '+' || ch == '-'
 }
 
 func isText(ch rune) bool {

@@ -20,15 +20,15 @@ commodity £
     Assets:Current:Account                                            £4.73
     Assets:Cash                                                       £62.50
     Assets:Savings:One                                                £171648.81
-    Assets:Savings:Two                                                £1401.54
+    Assets:Savings:Two                                                €1401.54
     Assets:Savings:Thre                                               £21457.15
-    Assets:Savings:Four                                               £18000
+    Assets:Savings:Four                                               -£18000
     Liabilities:Credit Card                                           -£646.21
     Equity:Opening Balances
 
 2016/11/01 ! Vision Express
     Expenses:Contact Lenses                                         £17
-    Assets:Current:Account
+    Assets:Current:Account ; what up doggg
 `
 
 func TestDateLex(t *testing.T) {

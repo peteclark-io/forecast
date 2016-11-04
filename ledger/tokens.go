@@ -1,6 +1,9 @@
 package ledger
 
-import "unicode"
+import (
+	"bytes"
+	"unicode"
+)
 
 type Token int
 
@@ -18,12 +21,14 @@ const (
 	DATE
 	ACCOUNT_SEPARATOR
 	CLEARED_INDICATOR
+	IS_NEGATIVE
 	COMMENT
 	PRICE
 	CURRENCY
 )
 
 type primitive struct {
+	bytes.Buffer
 	number int
 	text   int
 	other  map[rune]int
@@ -62,6 +67,14 @@ func isNewLine(ch rune) bool {
 	return unicode.IsSpace(ch)
 }
 
+func isComment(ch rune) bool {
+	return ch == ';'
+}
+
 func isText(ch rune) bool {
-	return ch != ':' && (unicode.IsLetter(ch) || unicode.IsPunct(ch))
+	return !isComment(ch) && !isAccountSeparator(ch) && (unicode.IsLetter(ch) || unicode.IsPunct(ch))
+}
+
+func isNegative(ch rune) bool {
+	return ch == '-'
 }

@@ -38,9 +38,13 @@ func (l *lexer) Scan() (Token, string) {
 		return EOF, string(ch)
 	}
 
+	if (l.last == COMMENT) && !isNewLine(ch) {
+		return COMMENT, string(ch)
+	}
+
 	if isNumber(ch) && (l.last == CR || l.last == SOF) {
 		l.unread()
-		date, err := l.lexDate(ch)
+		date, err := l.readDate(ch)
 		if err != nil {
 			log.Println(err)
 			return ILLEGAL, string(ch)
@@ -82,9 +86,7 @@ func (l *lexer) Scan() (Token, string) {
 
 	if isText(ch) && (l.last == CR_BLOCK_SPACE || l.last == ACCOUNT_SEPARATOR) {
 		l.unread()
-		txt := l.readAllOfType(func(ch rune) bool {
-			return isText(ch) || isWhitespace(ch)
-		}, nil)
+		txt := l.readAccount(ch)
 		l.last = ACCOUNT
 		return ACCOUNT, txt
 	}
@@ -94,7 +96,12 @@ func (l *lexer) Scan() (Token, string) {
 		return ACCOUNT_SEPARATOR, string(ch)
 	}
 
-	if unicode.IsSymbol(ch) && l.last == ACCOUNT {
+	if isNegative(ch) && (l.last == BLOCK_SPACE) {
+		l.last = IS_NEGATIVE
+		return IS_NEGATIVE, string(ch)
+	}
+
+	if unicode.IsSymbol(ch) && (l.last == BLOCK_SPACE || l.last == IS_NEGATIVE) {
 		l.unread()
 		txt := l.readAllOfType(unicode.IsSymbol, nil)
 		l.last = CURRENCY
@@ -113,7 +120,42 @@ func (l *lexer) Scan() (Token, string) {
 		return CR, string(ch)
 	}
 
+	if isComment(ch) {
+		l.last = COMMENT
+		return COMMENT, string(ch)
+	}
+
+	l.last = ILLEGAL
 	return ILLEGAL, string(ch)
+}
+
+func (l *lexer) readAccount(ch rune) string {
+	p := &primitive{text: 1, last: ch}
+	p.WriteRune(l.read())
+
+	for {
+		ch := l.read()
+
+		if ch == eof {
+			break
+		}
+
+		if isWhitespace(ch) && !isWhitespace(p.last) {
+			p.last = ch
+			p.WriteRune(ch)
+			continue
+		}
+
+		if !isText(ch) {
+			l.unread()
+			break
+		}
+
+		p.last = ch
+		p.WriteRune(ch)
+	}
+
+	return p.String()
 }
 
 func (l *lexer) readAllOfType(check func(ch rune) bool, ignore func(ch rune) bool) string {
@@ -142,11 +184,9 @@ func (l *lexer) readAllOfType(check func(ch rune) bool, ignore func(ch rune) boo
 	return buf.String()
 }
 
-func (l *lexer) lexDate(ch rune) (string, error) {
-	var buf bytes.Buffer
-	buf.WriteRune(l.read())
-
+func (l *lexer) readDate(ch rune) (string, error) {
 	p := &primitive{number: 1, other: make(map[rune]int), last: ch}
+	p.WriteRune(l.read())
 
 	for {
 		if p.total() == 10 {
@@ -175,8 +215,8 @@ func (l *lexer) lexDate(ch rune) (string, error) {
 			return "", errors.New("Not a date")
 		}
 
-		buf.WriteRune(ch)
+		p.WriteRune(ch)
 	}
 
-	return buf.String(), nil
+	return p.String(), nil
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/peteclark-io/forecast/balance"
 	"github.com/peteclark-io/forecast/ledger"
 	"github.com/urfave/cli"
 )
@@ -32,8 +33,13 @@ func main() {
 			return err
 		}
 
+		val, err := balance.Balance("Assets:Current:HSBC", postings)
+		if err != nil {
+			return err
+		}
+
 		encoder := json.NewEncoder(os.Stdout)
-		encoder.Encode(postings)
+		encoder.Encode(val)
 
 		return nil
 	}

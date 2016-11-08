@@ -72,14 +72,12 @@ func (l *lexer) Scan() (Token, string) {
 	if isCleared(ch) && l.last == DATE {
 		l.last = CLEARED_INDICATOR
 		return CLEARED_INDICATOR, string(ch)
-	} else if isCleared(ch) {
-		return ILLEGAL, string(ch)
 	}
 
-	if isText(ch) && l.last == CLEARED_INDICATOR {
+	if (isText(ch) || isNumber(ch)) && l.last == CLEARED_INDICATOR {
 		l.unread()
 		txt := l.readAllOfType(func(ch rune) bool {
-			return isText(ch) || isWhitespace(ch)
+			return isText(ch) || isWhitespace(ch) || isNumber(ch)
 		}, nil)
 		return PAYEE, txt
 	}
@@ -96,7 +94,7 @@ func (l *lexer) Scan() (Token, string) {
 		return ACCOUNT_SEPARATOR, string(ch)
 	}
 
-	if isCalculationBoundary(ch) && (l.last == BLOCK_SPACE || l.last == PRICE) {
+	if isCalculationBoundary(ch) && (l.last == BLOCK_SPACE || l.last == PRICE || l.last == PRICE_OPERATOR) {
 		return PRICE_CALC_BOUNDARY, string(ch)
 	}
 
@@ -117,7 +115,7 @@ func (l *lexer) Scan() (Token, string) {
 		return CURRENCY, txt
 	}
 
-	if isNumber(ch) && l.last == CURRENCY {
+	if isNumber(ch) && (l.last == CURRENCY || l.last == PRICE_OPERATOR) {
 		l.unread()
 		price := l.readAllOfType(isNumber, nil)
 		l.last = PRICE
@@ -224,7 +222,6 @@ func (l *lexer) readDate(ch rune) (string, error) {
 		}
 
 		if !isNumber(ch) && !isDateSeparator(ch) {
-			log.Println(string(ch))
 			l.unreadCharacters(p.total())
 			return "", errors.New("Not a date")
 		}

@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/peteclark-io/forecast/structs"
@@ -42,10 +42,90 @@ func (p *parser) Parse() ([]structs.Posting, error) {
 		}
 
 		postings = append(postings, posting)
-		log.Println(posting)
 	}
 
 	return postings, nil
+}
+
+func (p *parser) parseCalculation(token Token, value string) (string, float64, error) {
+	var price float64
+
+	var currency *string
+	var operator *string
+
+	for {
+		token, val := p.Scan()
+		if token == EOF {
+			break
+		}
+
+		if token == PRICE && operator == nil {
+			p, err := strconv.ParseFloat(val, 64)
+			price = p
+			if err != nil {
+				return "", 0, err
+			}
+		}
+
+		if token == PRICE && operator != nil {
+			p, err := strconv.ParseFloat(val, 64)
+			if err != nil {
+				return "", 0, err
+			}
+			price = doCalc(price, p, *operator)
+			operator = nil
+		}
+
+		if token == CURRENCY && currency == nil {
+			currency = &val
+		}
+
+		if token == PRICE_OPERATOR {
+			operator = &val
+		}
+
+		if token == PRICE_CALC_BOUNDARY && val == "(" {
+			c, p, err := p.parseCalculation(token, value)
+			if err != nil {
+				return "", 0, err
+			}
+
+			currency = &c
+
+			if operator != nil {
+				price = doCalc(price, p, *operator)
+			} else {
+				price = doCalc(price, p, "+")
+			}
+
+			operator = nil
+		}
+
+		if token == PRICE_CALC_BOUNDARY && val == ")" {
+			break
+		}
+	}
+
+	return *currency, price, nil
+}
+
+func doCalc(p1, p2 float64, operator string) float64 {
+	switch operator {
+	case "+":
+		p1 = p1 + p2
+		break
+	case "-":
+		p1 = p1 - p2
+		break
+	case "/":
+		p1 = p1 / p2
+		break
+	case "*":
+		p1 = p1 * p2
+		break
+	}
+
+	return Round(p1, 0.5, 2)
 }
 
 func (p *parser) parsePosting(token Token, value string) (structs.Posting, error) {
@@ -58,8 +138,10 @@ func (p *parser) parsePosting(token Token, value string) (structs.Posting, error
 	posting.Date = d
 
 	var entries []structs.Entry
-	entry := &structs.Entry{Amount: 1}
+	entry := &structs.Entry{}
 	last := token
+
+	negative := float64(1)
 
 	crs := 0
 	for {
@@ -81,11 +163,26 @@ func (p *parser) parsePosting(token Token, value string) (structs.Posting, error
 		}
 
 		if token == ACCOUNT {
-			entry.Account = append(entry.Account, val)
+			entry.Account = append(entry.Account, strings.TrimSpace(val))
+		}
+
+		if token == PRICE_CALC_BOUNDARY {
+			currency, price, err := p.parseCalculation(token, value)
+			if err != nil {
+				return *posting, nil
+			}
+
+			entry.Currency = currency
+			entry.Amount = price
+			entry.Calculated = true
+			entry.Reported = true
+			entries = append(entries, *entry)
+			negative = 1
+			entry.Reset()
 		}
 
 		if token == IS_NEGATIVE {
-			entry.Amount = -1
+			negative = -1
 		}
 
 		if token == CURRENCY {
@@ -98,12 +195,13 @@ func (p *parser) parsePosting(token Token, value string) (structs.Posting, error
 				return *posting, err
 			}
 
-			entry.Amount = entry.Amount * price
+			entry.Amount = negative * price
 			entry.Reported = true
 		}
 
-		if token == CR && (last == PRICE || last == ACCOUNT) {
+		if token == CR && (last == PRICE || last == ACCOUNT || last == COMMENT) {
 			entries = append(entries, *entry)
+			negative = 1
 			entry.Reset()
 		}
 

@@ -13,10 +13,11 @@ type Posting struct {
 }
 
 type Entry struct {
-	Account  []string `json:"account"`
-	Amount   float64  `json:"amount"`
-	Reported bool     `json:"reported"`
-	Currency string   `json:"currency"`
+	Account    []string `json:"account"`
+	Amount     float64  `json:"amount"`
+	Reported   bool     `json:"reported"`
+	Currency   string   `json:"currency"`
+	Calculated bool     `json:"calculated"`
 }
 
 func (e *Entry) IsComplete() bool {
@@ -27,5 +28,6 @@ func (e *Entry) Reset() {
 	e.Account = []string{}
 	e.Amount = 0
 	e.Reported = false
+	e.Calculated = false
 	e.Currency = ""
 }

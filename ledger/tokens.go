@@ -28,6 +28,7 @@ const (
 	PRICE_OPERATOR                   // 17
 	CURRENCY                         // 18
 	VIRTUAL_ACCOUNT                  // 19
+	EXCHANGE_RATE                    // 20
 )
 
 type primitive struct {
@@ -76,6 +77,10 @@ func isComment(ch rune) bool {
 
 func isCalculationBoundary(ch rune) bool {
 	return ch == '(' || ch == ')'
+}
+
+func isExchange(ch rune) bool {
+	return ch == '@'
 }
 
 func isCalculationOperator(ch rune) bool {

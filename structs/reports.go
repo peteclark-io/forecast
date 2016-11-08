@@ -13,12 +13,15 @@ type Posting struct {
 }
 
 type Entry struct {
-	Account    []string `json:"account"`
-	Amount     float64  `json:"amount"`
-	Reported   bool     `json:"reported"`
-	Currency   string   `json:"currency"`
-	Calculated bool     `json:"calculated"`
-	Virtual    bool     `json:"virtual"`
+	Account           []string `json:"account"`
+	Amount            float64  `json:"amount"`
+	ExchangedAmount   float64  `json:"exchangedAmount"`
+	Reported          bool     `json:"reported"`
+	Currency          string   `json:"currency"`
+	ExchangedCurrency string   `json:"exchangedCurrency"`
+	Calculated        bool     `json:"calculated"`
+	Virtual           bool     `json:"virtual"`
+	Exchanged         bool     `json:"exchanged"`
 }
 
 func (e *Entry) IsComplete() bool {
@@ -32,4 +35,7 @@ func (e *Entry) Reset() {
 	e.Calculated = false
 	e.Virtual = false
 	e.Currency = ""
+	e.ExchangedAmount = 0
+	e.ExchangedCurrency = ""
+	e.Exchanged = false
 }

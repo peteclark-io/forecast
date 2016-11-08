@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/peteclark-io/forecast/maths"
 	"github.com/peteclark-io/forecast/structs"
 )
 
@@ -38,7 +39,7 @@ func (p *parser) Parse() ([]structs.Posting, error) {
 
 		posting, err := p.parsePosting(token, val)
 		if err != nil {
-			continue
+			return postings, err
 		}
 
 		postings = append(postings, posting)
@@ -53,15 +54,21 @@ func (p *parser) parseCalculation(token Token, value string) (string, float64, e
 	var currency *string
 	var operator *string
 
+	negative := float64(1)
 	for {
 		token, val := p.Scan()
 		if token == EOF {
 			break
 		}
 
+		if token == IS_NEGATIVE {
+			negative = -1
+		}
+
 		if token == PRICE && operator == nil {
 			p, err := strconv.ParseFloat(val, 64)
-			price = p
+			price = p * negative
+			negative = 1
 			if err != nil {
 				return "", 0, err
 			}
@@ -72,7 +79,9 @@ func (p *parser) parseCalculation(token Token, value string) (string, float64, e
 			if err != nil {
 				return "", 0, err
 			}
-			price = doCalc(price, p, *operator)
+
+			price = doCalc(price, p*negative, *operator)
+			negative = 1
 			operator = nil
 		}
 
@@ -91,7 +100,6 @@ func (p *parser) parseCalculation(token Token, value string) (string, float64, e
 			}
 
 			currency = &c
-
 			if operator != nil {
 				price = doCalc(price, p, *operator)
 			} else {
@@ -125,7 +133,57 @@ func doCalc(p1, p2 float64, operator string) float64 {
 		break
 	}
 
-	return Round(p1, 0.5, 2)
+	return maths.Round(p1, 2)
+}
+
+func (p *parser) parseExchange(entry *structs.Entry, token Token, value string) (float64, string, error) {
+	var currency *string
+	var price float64 = 1
+
+	rate := true
+
+	for {
+		token, val := p.Scan()
+
+		if token == EOF || token == CR {
+			break
+		}
+
+		if token == EXCHANGE_RATE {
+			rate = false
+		}
+
+		if token == IS_NEGATIVE && rate {
+			return 0, "", errors.New("Cannot have a negative exchange rate!")
+		}
+
+		if token == IS_NEGATIVE {
+			price = -1
+		}
+
+		if token == CURRENCY {
+			currency = &val
+		}
+
+		if token == PRICE {
+			p, err := strconv.ParseFloat(val, 64)
+			if err != nil {
+				return 0, "", err
+			}
+			price = p * price
+			break
+		}
+	}
+
+	if currency == nil {
+		return price, "", errors.New("No currency found!")
+	}
+
+	if rate {
+		price = entry.Amount * price
+	}
+
+	return maths.Round(price, 2), *currency, nil
 }
 
 func (p *parser) parsePosting(token Token, value string) (structs.Posting, error) {
@@ -174,20 +232,28 @@ func (p *parser) parsePosting(token Token, value string) (structs.Posting, error
 		if token == PRICE_CALC_BOUNDARY {
 			currency, price, err := p.parseCalculation(token, value)
 			if err != nil {
-				return *posting, nil
+				return *posting, err
 			}
 
 			entry.Currency = currency
 			entry.Amount = price
 			entry.Calculated = true
 			entry.Reported = true
-			entries = append(entries, *entry)
-			negative = 1
-			entry.Reset()
 		}
 
 		if token == IS_NEGATIVE {
 			negative = -1
+		}
+
+		if token == EXCHANGE_RATE {
+			exchange, curr, err := p.parseExchange(entry, token, value)
+			if err != nil {
+				return *posting, err
+			}
+
+			entry.ExchangedAmount = exchange
+			entry.ExchangedCurrency = curr
+			entry.Exchanged = true
 		}
 
 		if token == CURRENCY {
@@ -204,7 +270,7 @@ func (p *parser) parsePosting(token Token, value string) (structs.Posting, error
 			entry.Reported = true
 		}
 
-		if token == CR && (last == PRICE || last == ACCOUNT || last == COMMENT) {
+		if token == CR && (last == PRICE || last == ACCOUNT || last == COMMENT || last == EXCHANGE_RATE || last == PRICE_CALC_BOUNDARY) {
 			entries = append(entries, *entry)
 			negative = 1
 			entry.Reset()

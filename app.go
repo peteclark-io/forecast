@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"regexp"
 
-	"github.com/peteclark-io/forecast/balance"
+	"github.com/peteclark-io/forecast/forecasting"
 	"github.com/peteclark-io/forecast/ledger"
 	"github.com/urfave/cli"
 )
@@ -25,23 +26,55 @@ func main() {
 	//app.Flags = flags
 	app.Version = "v0.0.1"
 
-	app.Action = func(ctx *cli.Context) error {
-		parser := ledger.NewParser(os.Stdin)
-		postings, err := parser.Parse()
+	app.Commands = []cli.Command{
+		{
+			Name:    "balance",
+			Aliases: []string{"b", "ba", "bal"},
+			Usage:   "Balance an account",
+			Action: func(c *cli.Context) error {
+				parser := ledger.NewParser(os.Stdin)
+				postings, err := parser.Parse()
 
-		if err != nil {
-			return err
-		}
+				if err != nil {
+					return err
+				}
 
-		val, err := balance.Balance("Assets:Current:HSBC", postings)
-		if err != nil {
-			return err
-		}
+				val, err := forecasting.Balance("Assets:Current:HSBC", postings)
+				if err != nil {
+					return err
+				}
 
-		encoder := json.NewEncoder(os.Stdout)
-		encoder.Encode(val)
+				encoder := json.NewEncoder(os.Stdout)
+				encoder.Encode(val)
 
-		return nil
+				return nil
+			},
+		},
+		{
+			Name:    "forecast",
+			Aliases: []string{"f", "fo", "for"},
+			Usage:   "Forecast",
+			Action: func(c *cli.Context) error {
+				parser := ledger.NewParser(os.Stdin)
+				postings, err := parser.Parse()
+
+				if err != nil {
+					return err
+				}
+
+				filter, err := regexp.Compile(c.Args().First())
+				if err != nil {
+					return err
+				}
+
+				data := forecasting.AverageByDay(filter, postings)
+				w := json.NewEncoder(os.Stdout)
+				w.SetIndent("", "  ")
+				w.Encode(data)
+
+				return nil
+			},
+		},
 	}
 
 	app.Run(os.Args)

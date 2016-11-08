@@ -95,6 +95,11 @@ func (l *lexer) Scan() (Token, string) {
 		return ACCOUNT, txt
 	}
 
+	if isExchange(ch) && (l.last == PRICE || l.last == EXCHANGE_RATE || l.last == BLOCK_SPACE) {
+		l.last = EXCHANGE_RATE
+		return EXCHANGE_RATE, string(ch)
+	}
+
 	if isAccountSeparator(ch) && (l.last == ACCOUNT || l.last == VIRTUAL_ACCOUNT) {
 		l.last = ACCOUNT_SEPARATOR
 		return ACCOUNT_SEPARATOR, string(ch)
@@ -104,17 +109,12 @@ func (l *lexer) Scan() (Token, string) {
 		return PRICE_CALC_BOUNDARY, string(ch)
 	}
 
-	if isNegative(ch) && (l.last == BLOCK_SPACE) {
+	if isNegative(ch) && (l.last == BLOCK_SPACE || l.last == PRICE_OPERATOR || l.last == EXCHANGE_RATE) {
 		l.last = IS_NEGATIVE
 		return IS_NEGATIVE, string(ch)
 	}
 
-	if isNegative(ch) && (l.last == BLOCK_SPACE || l.last == PRICE_OPERATOR) {
-		l.last = IS_NEGATIVE
-		return IS_NEGATIVE, string(ch)
-	}
-
-	if unicode.IsSymbol(ch) && (l.last == BLOCK_SPACE || l.last == IS_NEGATIVE || l.last == PRICE_CALC_BOUNDARY || l.last == PRICE_OPERATOR) {
+	if unicode.IsSymbol(ch) && (l.last == BLOCK_SPACE || l.last == IS_NEGATIVE || l.last == PRICE_CALC_BOUNDARY || l.last == PRICE_OPERATOR || l.last == EXCHANGE_RATE) {
 		l.unread()
 		txt := l.readAllOfType(unicode.IsSymbol, nil)
 		l.last = CURRENCY

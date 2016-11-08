@@ -27,6 +27,7 @@ const (
 	PRICE_CALC_BOUNDARY              // 16
 	PRICE_OPERATOR                   // 17
 	CURRENCY                         // 18
+	VIRTUAL_ACCOUNT                  // 19
 )
 
 type primitive struct {

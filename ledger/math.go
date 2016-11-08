@@ -1,8 +1,12 @@
 package ledger
 
-import "math"
+import (
+	"fmt"
+	"math"
+	"strconv"
+)
 
-func Round(val float64, roundOn float64, places int) (newVal float64) {
+func RoundOld(val float64, roundOn float64, places int) (newVal float64) {
 	var round float64
 	pow := math.Pow(10, float64(places))
 	digit := pow * val
@@ -14,4 +18,10 @@ func Round(val float64, roundOn float64, places int) (newVal float64) {
 	}
 	newVal = round / pow
 	return
+}
+
+func Round(val float64, roundOn float64, places int) float64 {
+	result := fmt.Sprintf("%.2f", val)
+	float, _ := strconv.ParseFloat(result, 64)
+	return float
 }

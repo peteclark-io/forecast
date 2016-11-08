@@ -36,7 +36,7 @@ commodity £
 
 2016/07/09 * Palm 2
     Expenses:Food:Breakfast                                          £4.30
-    Expenses:Food:Coffee                                             £5
+    (Expenses:Food:Coffee)                                           £4.30
     Assets:Cash
 `
 
@@ -65,8 +65,8 @@ func TestFullPosting(t *testing.T) {
 func TestPriceCalc(t *testing.T) {
 	l := lexer{stream: bufio.NewReader(strings.NewReader(testCalcPosting1)), last: SOF}
 	for {
-		token, txt := l.Scan()
-		t.Log(token, txt)
+		token, _ := l.Scan()
+		//t.Log(token, txt)
 		if token == EOF {
 			break
 		}

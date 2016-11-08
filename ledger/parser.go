@@ -166,6 +166,11 @@ func (p *parser) parsePosting(token Token, value string) (structs.Posting, error
 			entry.Account = append(entry.Account, strings.TrimSpace(val))
 		}
 
+		if token == VIRTUAL_ACCOUNT {
+			entry.Account = append(entry.Account, strings.TrimSpace(val))
+			entry.Virtual = true
+		}
+
 		if token == PRICE_CALC_BOUNDARY {
 			currency, price, err := p.parseCalculation(token, value)
 			if err != nil {

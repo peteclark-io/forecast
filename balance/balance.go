@@ -11,6 +11,9 @@ import (
 func calcUnreported(posting structs.Posting) float64 {
 	total := float64(0)
 	for _, entry := range posting.Entries {
+		if entry.Virtual {
+			continue
+		}
 		total = total + entry.Amount
 	}
 
@@ -22,6 +25,10 @@ func Balance(account string, postings []structs.Posting) (float64, error) {
 
 	for _, posting := range postings {
 		for _, entry := range posting.Entries {
+			if entry.Virtual {
+				continue
+			}
+
 			if strings.Join(entry.Account, ":") == account {
 				amount := entry.Amount
 				if !entry.Reported {

@@ -18,6 +18,7 @@ type Entry struct {
 	Reported   bool     `json:"reported"`
 	Currency   string   `json:"currency"`
 	Calculated bool     `json:"calculated"`
+	Virtual    bool     `json:"virtual"`
 }
 
 func (e *Entry) IsComplete() bool {
@@ -29,5 +30,6 @@ func (e *Entry) Reset() {
 	e.Amount = 0
 	e.Reported = false
 	e.Calculated = false
+	e.Virtual = false
 	e.Currency = ""
 }

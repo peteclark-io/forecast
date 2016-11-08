@@ -82,6 +82,12 @@ func (l *lexer) Scan() (Token, string) {
 		return PAYEE, txt
 	}
 
+	if isCalculationBoundary(ch) && (l.last == CR_BLOCK_SPACE || l.last == ACCOUNT_SEPARATOR) {
+		txt := l.readAccount(ch)
+		l.last = VIRTUAL_ACCOUNT
+		return VIRTUAL_ACCOUNT, txt
+	}
+
 	if isText(ch) && (l.last == CR_BLOCK_SPACE || l.last == ACCOUNT_SEPARATOR) {
 		l.unread()
 		txt := l.readAccount(ch)
@@ -89,7 +95,7 @@ func (l *lexer) Scan() (Token, string) {
 		return ACCOUNT, txt
 	}
 
-	if isAccountSeparator(ch) && l.last == ACCOUNT {
+	if isAccountSeparator(ch) && (l.last == ACCOUNT || l.last == VIRTUAL_ACCOUNT) {
 		l.last = ACCOUNT_SEPARATOR
 		return ACCOUNT_SEPARATOR, string(ch)
 	}
@@ -156,6 +162,10 @@ func (l *lexer) readAccount(ch rune) string {
 			p.last = ch
 			p.WriteRune(ch)
 			continue
+		}
+
+		if ch == ')' {
+			break
 		}
 
 		if !isText(ch) {

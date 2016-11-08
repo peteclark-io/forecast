@@ -1,7 +1,6 @@
 package ledger
 
 import (
-	"encoding/json"
 	"strings"
 	"testing"
 
@@ -28,8 +27,8 @@ func TestParse(t *testing.T) {
 	p := NewParser(strings.NewReader(testCalcPosting1))
 	postings, _ := p.Parse()
 
-	d, _ := json.MarshalIndent(postings, "", "  ")
-	t.Log(string(d))
+	//d, _ := json.MarshalIndent(postings, "", "  ")
+	//t.Log(string(d))
 
 	assert.Len(t, postings, 1)
 	assert.Equal(t, postings[0].Cleared, true)
@@ -73,8 +72,8 @@ func TestParse(t *testing.T) {
 
 func TestParsePosting(t *testing.T) {
 	p := NewParser(strings.NewReader(testPosting))
-	postings, _ := p.Parse()
+	p.Parse()
 
-	d, _ := json.MarshalIndent(postings, "", "  ")
-	t.Log(string(d))
+	//d, _ := json.MarshalIndent(postings, "", "  ")
+	//t.Log(string(d))
 }

@@ -110,7 +110,7 @@ func (p *parser) parseCalculation(token Token, value string) (string, float64, e
 		}
 
 		if token == PRICE_CALC_BOUNDARY && val == ")" {
-			break
+			continue
 		}
 	}
 
@@ -132,7 +132,6 @@ func doCalc(p1, p2 float64, operator string) float64 {
 		p1 = p1 * p2
 		break
 	}
-
 	return maths.Round(p1, 2)
 }
 
@@ -229,7 +228,7 @@ func (p *parser) parsePosting(token Token, value string) (structs.Posting, error
 			entry.Virtual = true
 		}
 
-		if token == PRICE_CALC_BOUNDARY {
+		if token == PRICE_CALC_BOUNDARY && val == "(" {
 			currency, price, err := p.parseCalculation(token, value)
 			if err != nil {
 				return *posting, err

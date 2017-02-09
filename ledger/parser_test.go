@@ -38,32 +38,32 @@ func TestParse(t *testing.T) {
 	for _, entry := range postings[0].Entries {
 		switch strings.Join(entry.Account, ":") {
 		case "Assets:Cash":
-			assert.Equal(t, entry.Amount, float64(30))
+			assert.Equal(t, float64(30), entry.Amount)
 			assert.False(t, entry.Calculated)
 			assert.True(t, entry.Reported)
 			break
 		case "Expenses:Fun":
-			assert.Equal(t, entry.Amount, 18.65)
+			assert.Equal(t, 18.65, entry.Amount)
 			assert.True(t, entry.Calculated)
 			assert.True(t, entry.Reported)
 			break
 		case "Expenses:Food:Dinner Out":
-			assert.Equal(t, entry.Amount, 6.35)
+			assert.Equal(t, 6.35, entry.Amount)
 			assert.True(t, entry.Calculated)
 			assert.True(t, entry.Reported)
 			break
 		case "Expenses:Food:Snacks":
-			assert.Equal(t, entry.Amount, 2.85)
+			assert.Equal(t, 2.85, entry.Amount)
 			assert.True(t, entry.Calculated)
 			assert.True(t, entry.Reported)
 			break
 		case "Assets:Ducky":
-			assert.Equal(t, entry.Amount, 27.85)
+			assert.Equal(t, 27.85, entry.Amount)
 			assert.True(t, entry.Calculated)
 			assert.True(t, entry.Reported)
 			break
 		case "Assets:Current:HSBC":
-			assert.Equal(t, entry.Amount, float64(0))
+			assert.Equal(t, float64(0), entry.Amount)
 			assert.False(t, entry.Reported)
 			assert.False(t, entry.Calculated)
 			break

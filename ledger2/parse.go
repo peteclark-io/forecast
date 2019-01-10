@@ -17,5 +17,8 @@ func computePrice(n *Node) {
 			return
 		}
 
+		if ch == '(' {
+
+		}
 	}
 }
